@@ -1,38 +1,36 @@
-import colormath.color_conversions
-import colormath.color_diff
-import colormath.color_objects
 import gymnasium as gym
 from gymnasium import spaces
-import colormath
-from colormath.color_objects import sRGBColor
 import numpy as np
 import random
 import cv2
+from colour import delta_E
+from colour.models import RGB_to_XYZ, XYZ_to_Lab
+from colour.colorimetry import CCS_ILLUMINANTS
+
+def sRGB_to_Lab(srgb_image):
+    srgb = srgb_image.astype(np.float32) / 255.0
+    linear_rgb = np.where(srgb <= 0.04045, srgb / 12.92, ((srgb + 0.055) / 1.055) ** 2.4)
+    xyz = RGB_to_XYZ(linear_rgb, 'sRGB')
+    illuminant_D65 = CCS_ILLUMINANTS['CIE 1931 2 Degree Standard Observer']['D65']
+    lab = XYZ_to_Lab(xyz, illuminant_D65)
+    return lab
 
 def canvas_delta(c1, c2):
-    res = 0
-    for y in range(256):
-        for x in range(256):
-            color1 = sRGBColor(c1[y][x][0],c1[y][x][1],c1[y][x][2])
-            color2 = sRGBColor(c2[y][x][0],c2[y][x][1],c2[y][x][2])
-            delta = colormath.color_diff.delta_e_cie2000(
-                colormath.color_conversions.convert_color(color1,colormath.color_objects.LabColor),
-                colormath.color_conversions.convert_color(color2,colormath.color_objects.LabColor)
-            )
-            res+=delta
-
-    return res
+    lab1 = sRGB_to_Lab(c1)
+    lab2 = sRGB_to_Lab(c2)
+    delta = delta_E(lab1.reshape(-1, 3), lab2.reshape(-1, 3))
+    return (np.sum(delta)/(100*255*255))
 
 
 class StrokeEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 60}
 
-    def __init__(self, max_steps=50, images=None):
+    def __init__(self, max_steps=50, images=None, render_mode=None):
         super().__init__()
 
         self.observation_space = spaces.Dict({
-            "target_canvas": spaces.Box(0, 256, (256, 256, 3), dtype=float),
-            "agent_canvas": spaces.Box(0, 256, (256, 256, 3), dtype=float)
+            "target_canvas": spaces.Box(0, 255, (256, 256, 3), dtype=float),
+            "agent_canvas": spaces.Box(0, 255, (256, 256, 3), dtype=float)
         })
 
         self.action_space = spaces.Box(0,1,(8,),dtype=float)
@@ -70,20 +68,19 @@ class StrokeEnv(gym.Env):
             "color":action[5:8]
         }
 
-        pt1 = tuple(map(int, action['line_start']))
-        pt2 = tuple(map(int, action['line_end']))
-        thickness = int(action['line_thickness'])
-        color = tuple(map(int, action['color']))
-        print(thickness)
+        pt1 = tuple(map(int, action['line_start']*256))
+        pt2 = tuple(map(int, action['line_end']*256))
+        thickness = int(action['line_thickness']*256)
+        color = tuple(map(int, action['color']*255))
         if thickness > 0:
-            cv2.line(self._agent_canvas, pt1*256, pt2*256, color*256, thickness*256)
+            cv2.line(self._agent_canvas, pt1, pt2, color, thickness)
+
+        new_delta = canvas_delta(self._target_canvas, self._agent_canvas)
 
         if not self._prev_delta:
-            self._prev_delta = 0
-            
-        new_delta = canvas_delta(self._target_canvas, self._agent_canvas)
-        
-        reward = 1-(new_delta-self._prev_delta)
+            self._prev_delta = 1
+                
+        reward = -(new_delta-self._prev_delta)
         observation = self._get_obs()
         info = self._get_info()
 
@@ -92,9 +89,13 @@ class StrokeEnv(gym.Env):
         truncated = False
         self._step += 1
         if self._step >= self.max_steps:
+            print(reward)
             truncated = True
+            self._step = 0
 
         return observation, reward, False, truncated, info
     
-    def render(self):
-        cv2.imshow(self._agent_canvas)
+    def render(self, mode="human"):
+        if mode == "human":
+            cv2.imshow("Agent Canvas", self._agent_canvas)
+            cv2.waitKey(1)

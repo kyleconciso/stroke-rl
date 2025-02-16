@@ -1,5 +1,6 @@
 import gymnasium as gym
-from stable_baselines3 import PPO
+import gymnasium as gym
+from stable_baselines3 import A2C
 from stroke.env import StrokeEnv
 import os
 import cv2
@@ -16,23 +17,21 @@ for fn in os.listdir("data/clean"):
     im = cv2.imread("data/clean/"+fn)
     images.append(im)
 
-print(images[1].shape)
-
 
 # register and train
 gym.register(
     id="Stroke-v0",
     entry_point=StrokeEnv
 )
-env = gym.make("Stroke-v0", images=images)
 
-model = PPO("MultiInputPolicy", env, verbose=1, device="cpu")
-model.learn(total_timesteps=10000)
-model.save("model")
+env = gym.make("Stroke-v0", images=images, render_mode="human")
 
-vec_env = model.get_env()
-obs = vec_env.reset()
-for i in range(1000):
-    action, _state = model.predict(obs, deterministic=True)
-    obs, reward, done, info = vec_env.step(action)
-    vec_env.render("human")
+observation, info = env.reset(seed=42)
+for _ in range(1000):
+    env.render()
+    action = env.action_space.sample()
+    observation, reward, terminated, truncated, info = env.step(action)
+    if terminated or truncated:
+        observation, info = env.reset()
+
+env.close()

@@ -24,7 +24,7 @@ gym.register(
 )
 env = gym.make("Stroke-v0", images=images, render_mode="human")
 model = PPO("CnnPolicy", env, verbose=1, device="cuda")
-model = model.load("weights/checkpoint0_7",env=env,print_system_info=True)
+model = model.load("weights/checkpoint0_1",env=env,print_system_info=True)
 print(model.policy.state_dict)
 vec_env = model.get_env()
 obs = vec_env.reset()

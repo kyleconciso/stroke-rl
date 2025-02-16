@@ -46,19 +46,20 @@ class StrokeEnv(gym.Env):
         action = {
             "line_start":action[:2],
             "line_end":action[2:4],
-            "line_thickness":action[4:5],
+            "line_thickness":action[4:5][0],
             "color":action[5:8]
         }
+        print(action)
 
         pt1 = tuple(map(int, action['line_start']*128))
         pt2 = tuple(map(int, action['line_end']*128))
-        thickness = int(action['line_thickness']*128)
+        thickness = int(action['line_thickness']*128)+1
         color = tuple(map(int, action['color']*255))
-        if thickness > 0:
-            cv2.line(self._agent_canvas, pt1, pt2, color, thickness)
+
+        cv2.line(self._agent_canvas, pt1, pt2, color, thickness)
 
                 
-        reward = 1-canvas_delta(self._target_canvas, self._agent_canvas)
+        reward = 1+-canvas_delta(self._target_canvas, self._agent_canvas)
         observation = self._get_obs()
         info = self._get_info()
 
@@ -73,6 +74,5 @@ class StrokeEnv(gym.Env):
     
     def render(self):
         if self.render_mode == "human":
-            print("yes")
-            cv2.imshow("Agent Canvas", cv2.resize(self._agent_canvas,(500,500)))
+            cv2.imshow("Agent Canvas", self._agent_canvas)
             cv2.waitKey(1)

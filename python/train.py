@@ -25,7 +25,7 @@ gym.register(
 env = gym.make("Stroke-v0", images=images)
 
 model = PPO("CnnPolicy", env, verbose=1, device="cuda")
-model.learn(total_timesteps=500000)
+model.learn(total_timesteps=250000)
 model.save("model")
 
 vec_env = model.get_env()
@@ -33,4 +33,5 @@ obs = vec_env.reset()
 for i in range(1000):
     action, _state = model.predict(obs, deterministic=True)
     obs, reward, done, info = vec_env.step(action)
-    vec_env.render("human")
+    # vec_env.render("human")
+s

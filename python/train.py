@@ -16,8 +16,6 @@ for fn in os.listdir("data/clean"):
     im = cv2.imread("data/clean/"+fn)
     images.append(im)
 
-print(images[1].shape)
-
 
 # register and train
 gym.register(

@@ -24,7 +24,7 @@ gym.register(
 )
 env = gym.make("Stroke-v0", images=images)
 
-model = PPO("MultiInputPolicy", env, verbose=1, device="cuda")
+model = PPO("MultiInputPolicy", env, verbose=1, device="cpu")
 model.learn(total_timesteps=10000)
 model.save("model")
 

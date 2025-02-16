@@ -6,26 +6,22 @@ import cv2
 from skimage.color import rgb2lab, deltaE_cie76
 
 def canvas_delta(c1, c2):
-    lab1 = rgb2lab(c1.astype(np.float32) / 255.0)
-    lab2 = rgb2lab(c2.astype(np.float32) / 255.0)
+    lab1 = rgb2lab(c1 / 255.0)
+    lab2 = rgb2lab(c2 / 255.0)
     delta = deltaE_cie76(lab1, lab2)
     return np.mean(delta) / 100
 
 class StrokeEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 60}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 4}
 
-    def __init__(self, max_steps=50, images=None, render_mode=None):
+    def __init__(self, max_steps=50, images=None, render_mode="rgb_array"):
         super().__init__()
 
+        self.render_mode = render_mode
         self.observation_space = spaces.Box(0, 255, (128, 128, 6), dtype=np.uint8)
-
         self.action_space = spaces.Box(0,1,(8,),dtype=float)
-
         self.max_steps = max_steps
-
         self.images = images
-
-        self._prev_delta = None
 
     def _get_obs(self):
         return np.concatenate((self._target_canvas, self._agent_canvas),axis=2,dtype=np.uint8)
@@ -61,16 +57,10 @@ class StrokeEnv(gym.Env):
         if thickness > 0:
             cv2.line(self._agent_canvas, pt1, pt2, color, thickness)
 
-        new_delta = canvas_delta(self._target_canvas, self._agent_canvas)
-
-        if not self._prev_delta:
-            self._prev_delta = 1
                 
-        reward = -(new_delta-self._prev_delta)
+        reward = 1-canvas_delta(self._target_canvas, self._agent_canvas)
         observation = self._get_obs()
         info = self._get_info()
-
-        self._prev_delta = new_delta
 
         truncated = False
         self._step += 1
@@ -81,7 +71,8 @@ class StrokeEnv(gym.Env):
 
         return observation, reward, False, truncated, info
     
-    def render(self, mode="human"):
-        if mode == "human":
-            cv2.imshow("Agent Canvas", self._agent_canvas)
+    def render(self):
+        if self.render_mode == "human":
+            print("yes")
+            cv2.imshow("Agent Canvas", cv2.resize(self._agent_canvas,(500,500)))
             cv2.waitKey(1)

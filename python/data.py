@@ -17,7 +17,7 @@ def download(name,url):
 def clean():
     for f in os.listdir('data/raw'):
         im = cv2.imread('data/raw/'+f)
-        im = cv2.resize(im,(256,256))
+        im = cv2.resize(im,(128,128))
         cv2.imwrite('data/clean/'+f,im)
 
 ids = list(range(0,len(dataset)-1))

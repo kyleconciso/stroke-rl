@@ -17,10 +17,7 @@ class StrokeEnv(gym.Env):
     def __init__(self, max_steps=50, images=None, render_mode=None):
         super().__init__()
 
-        self.observation_space = spaces.Dict({
-            "target_canvas": spaces.Box(0, 255, (256, 256, 3), dtype=float),
-            "agent_canvas": spaces.Box(0, 255, (256, 256, 3), dtype=float)
-        })
+        self.observation_space = spaces.Box(0, 255, (128, 128, 6), dtype=np.uint8)
 
         self.action_space = spaces.Box(0,1,(8,),dtype=float)
 
@@ -31,7 +28,7 @@ class StrokeEnv(gym.Env):
         self._prev_delta = None
 
     def _get_obs(self):
-        return {"target_canvas":self._target_canvas, "agent_canvas":self._agent_canvas}
+        return np.concatenate((self._target_canvas, self._agent_canvas),axis=2,dtype=np.uint8)
     
     def _get_info(self):
         return {"delta": canvas_delta(self._target_canvas, self._agent_canvas)}
@@ -39,7 +36,7 @@ class StrokeEnv(gym.Env):
     def reset(self, seed=None, target_img=None, options=None):
         super().reset(seed=seed)
 
-        self._agent_canvas = np.ones((256, 256, 3), dtype=np.uint8)
+        self._agent_canvas = np.ones((128, 128, 3), dtype=np.uint8)
         self._target_canvas = random.choice(self.images)
 
         observation = self._get_obs()
@@ -57,9 +54,9 @@ class StrokeEnv(gym.Env):
             "color":action[5:8]
         }
 
-        pt1 = tuple(map(int, action['line_start']*256))
-        pt2 = tuple(map(int, action['line_end']*256))
-        thickness = int(action['line_thickness']*256)
+        pt1 = tuple(map(int, action['line_start']*128))
+        pt2 = tuple(map(int, action['line_end']*128))
+        thickness = int(action['line_thickness']*128)
         color = tuple(map(int, action['color']*255))
         if thickness > 0:
             cv2.line(self._agent_canvas, pt1, pt2, color, thickness)

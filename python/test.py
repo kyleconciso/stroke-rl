@@ -24,11 +24,11 @@ gym.register(
 )
 env = gym.make("Stroke-v0", images=images, render_mode="human")
 model = PPO("CnnPolicy", env, verbose=1, device="cuda")
-model = model.load("weights/checkpoint0_1",env=env,print_system_info=True)
+model = model.load("weights/checkpoint_v3",env=env,print_system_info=True)
 print(model.policy.state_dict)
 vec_env = model.get_env()
 obs = vec_env.reset()
 for i in range(10000):
-    action, _state = model.predict(obs, deterministic=True)
+    action, _state = model.predict(obs, deterministic=False)
     obs, reward, dones, info = vec_env.step(action)
     vec_env.render()

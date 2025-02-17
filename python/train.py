@@ -25,7 +25,7 @@ gym.register(
 env = gym.make("Stroke-v0", images=images)
 
 model = PPO("CnnPolicy", env, verbose=1, device="cuda", n_steps=20)
-model.learn(total_timesteps=25000)
+model.learn(total_timesteps=15000)
 model.save("model")
 
 vec_env = model.get_env()

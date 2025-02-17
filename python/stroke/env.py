@@ -91,7 +91,7 @@ class StrokeEnv(gym.Env):
         truncated = False
         self._step += 1
 
-        self.render(override=True)
+        # self.render(override=True)
 
         if self._step >= self.max_steps:
             print(reward)

@@ -65,12 +65,14 @@ class StrokeEnv(gym.Env):
         terminated = False
         reward = 0
         if delta_change > 0:
-            reward = -10 + (delta_change*100)
+            reward = (-delta_change*100)
             # terminated = True
         elif delta_change ==0 and self._step>0:
-            reward = -10
+            reward = 0
         elif delta_change < 0:
             reward = -delta_change*100
+
+        self._prev_delta = new_delta
 
         # if not self._prev_thickness:
         #     self._prev_thickness = thickness
@@ -80,13 +82,10 @@ class StrokeEnv(gym.Env):
         # else:
         #     reward += 2
 
-        print(reward)
         self._prev_thickness = thickness
 
         observation = self._get_obs()
         info = self._get_info()
-
-        self._prev_delta = new_delta
 
         truncated = False
         self._step += 1
@@ -96,7 +95,6 @@ class StrokeEnv(gym.Env):
         if self._step >= self.max_steps:
             print(reward)
             truncated = True
-            self._step = 0
 
         return observation, reward, terminated, truncated, info
     

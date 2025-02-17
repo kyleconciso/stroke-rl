@@ -21,6 +21,7 @@ class StrokeEnv(gym.Env):
         self.observation_space = spaces.Box(0, 255, (128, 128, 6), dtype=np.uint8)
         self.action_space = spaces.Box(0,1,(8,),dtype=float)
         self.max_steps = max_steps
+        self._step = 0
         self.images = images
         self._prev_thickness = None
 
@@ -83,7 +84,9 @@ class StrokeEnv(gym.Env):
         # else:
         #     reward += 2
 
-        self._prev_thickness = thickness
+        # self._prev_thickness = thickness
+
+        print(reward)
 
         observation = self._get_obs()
         info = self._get_info()
@@ -94,7 +97,7 @@ class StrokeEnv(gym.Env):
         # self.render(override=True)
 
         if self._step >= self.max_steps:
-            print(reward)
+            # print(reward)
             truncated = True
 
         return observation, reward, terminated, truncated, info

@@ -61,10 +61,10 @@ class StrokeEnv(gym.Env):
 
         new_delta = canvas_delta(self._target_canvas, self._agent_canvas)
         delta_change = (new_delta-self._prev_delta)
-        
+
         terminated = False
         if delta_change >= 0:
-            reward = 0
+            reward = -1
             terminated = True
         elif delta_change < 0:
             reward = -delta_change

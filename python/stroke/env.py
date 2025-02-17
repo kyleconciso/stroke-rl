@@ -34,11 +34,13 @@ class StrokeEnv(gym.Env):
 
         self._agent_canvas = np.ones((128, 128, 3), dtype=np.uint8)
         self._target_canvas = random.choice(self.images)
+        self._prev_delta = canvas_delta(self._target_canvas, self._agent_canvas)
 
         observation = self._get_obs()
         info = self._get_info()
 
         self._step = 0
+
 
         return observation, info
     
@@ -49,7 +51,6 @@ class StrokeEnv(gym.Env):
             "line_thickness":action[4:5][0],
             "color":action[5:8]
         }
-        print(action)
 
         pt1 = tuple(map(int, action['line_start']*128))
         pt2 = tuple(map(int, action['line_end']*128))
@@ -58,10 +59,20 @@ class StrokeEnv(gym.Env):
 
         cv2.line(self._agent_canvas, pt1, pt2, color, thickness)
 
-                
-        reward = 1+-canvas_delta(self._target_canvas, self._agent_canvas)
+        new_delta = canvas_delta(self._target_canvas, self._agent_canvas)
+        delta_change = (new_delta-self._prev_delta)
+        
+        terminated = False
+        if delta_change >= 0:
+            reward = 0
+            terminated = True
+        elif delta_change < 0:
+            reward = -delta_change
+
         observation = self._get_obs()
         info = self._get_info()
+
+        self._prev_delta = new_delta
 
         truncated = False
         self._step += 1
@@ -70,7 +81,7 @@ class StrokeEnv(gym.Env):
             truncated = True
             self._step = 0
 
-        return observation, reward, False, truncated, info
+        return observation, reward, terminated, truncated, info
     
     def render(self):
         if self.render_mode == "human":

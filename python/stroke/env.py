@@ -66,7 +66,7 @@ class StrokeEnv(gym.Env):
         terminated = False
         reward = 0
         if delta_change > 0:
-            reward = (-delta_change*100)
+            reward = -delta_change*100
             # terminated = True
         elif delta_change ==0 and self._step>0:
             reward = -100
@@ -105,6 +105,6 @@ class StrokeEnv(gym.Env):
     def render(self, override=False):
         if self.render_mode == "human" or override:
             # cv2.line(self._agent_canvas, (0,0), (128,128), (255,0,0), 2)
-            frame = cv2.addWeighted(self._target_canvas, 0.5, self._agent_canvas, 0.5, 0)
+            frame = cv2.addWeighted(self._target_canvas, 0, self._agent_canvas, 1, 0)
             cv2.imshow("Agent Canvas", cv2.resize(frame, (500,500)))
             cv2.waitKey(1)

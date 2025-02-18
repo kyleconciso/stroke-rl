@@ -1,0 +1,41 @@
+import gymnasium as gym
+import cv2
+import numpy as np
+import time
+from env import StrokeEnv 
+
+def create_target_image():
+    target = np.zeros((128, 128, 3), dtype=np.uint8)
+    for i in range(128):
+        for j in range(128):
+            target[i, j] = [i * 2 % 256, j * 2 % 256, (255 - i - j) % 256]
+    return target
+
+def main():
+    target_image = create_target_image()
+    images = [target_image]
+
+    env = StrokeEnv(max_steps=256, images=images, render_mode="human")
+    obs, info = env.reset()
+
+    blur_kernel_size = 5001  # must be odd
+    blurred_target = cv2.GaussianBlur(env._target_canvas, (blur_kernel_size, blur_kernel_size), 0)
+    env._agent_canvas = blurred_target.copy()
+
+    action = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0], dtype=float)
+
+    for step in range(env.max_steps):
+        alpha = step / (env.max_steps - 1)
+        deblurred = cv2.addWeighted(blurred_target, 1 - alpha, env._target_canvas, alpha, 0)
+        env._agent_canvas = deblurred.astype(np.uint8)
+
+        obs, reward, done, truncated, info = env.step(action)
+        print(f"Step {step:03d} | Reward: {reward:.2f} | Delta: {info['delta']:.4f}")
+        env.render()
+
+        time.sleep(0.01)
+
+    cv2.destroyAllWindows()
+
+if __name__ == "__main__":
+    main()

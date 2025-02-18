@@ -15,6 +15,7 @@ setattr(numpy, "asscalar", patch_asscalar)
 images = []
 for fn in os.listdir("data/clean"):
     im = cv2.imread("data/clean/"+fn)
+    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
     images.append(im)
 
 
@@ -26,8 +27,8 @@ gym.register(
 # env = gym.make("Stroke-v0", images=images)
 env = make_vec_env("Stroke-v0", n_envs=8, env_kwargs={"images":images})
 
-model = PPO("CnnPolicy", env, verbose=1, device="cuda", n_steps=24, batch_size=24*8)
-model.learn(total_timesteps=10000)
+model = PPO("CnnPolicy", env, verbose=1, device="cuda", n_steps=48, batch_size=48*8)
+model.learn(total_timesteps=100000)
 model.save("model")
 
 vec_env = model.get_env()

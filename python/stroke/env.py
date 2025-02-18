@@ -86,7 +86,7 @@ class StrokeEnv(gym.Env):
 
         # self._prev_thickness = thickness
 
-        print(reward)
+        # print(reward)
 
         observation = self._get_obs()
         info = self._get_info()
@@ -97,7 +97,7 @@ class StrokeEnv(gym.Env):
         # self.render(override=True)
 
         if self._step >= self.max_steps:
-            # print(reward)
+            print(reward)
             truncated = True
 
         return observation, reward, terminated, truncated, info

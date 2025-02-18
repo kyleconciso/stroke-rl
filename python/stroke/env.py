@@ -69,8 +69,8 @@ class StrokeEnv(gym.Env):
             reward = -delta_change*100
             # terminated = True
         elif delta_change ==0 and self._step>0:
-            reward = -100
-            terminated = True
+            reward = 0
+            # terminated = True
         elif delta_change < 0:
             reward = -delta_change*100
 
